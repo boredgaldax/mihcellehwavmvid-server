@@ -1,0 +1,27 @@
+﻿@inherits LayoutComponentBase
+@inject Applicationprovider applicationprovider
+@inject IConfiguration configuration
+@inject Data.Applicationdbcontext applicationdbcontext
+
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using System.Linq
+@using System.Collections.Generic
+@using Mihcelle.Hwavmvid.Shared.Models
+
+<div class="page">
+    <main>
+        @Body
+    </main>
+
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code{
+
+}

@@ -1,0 +1,176 @@
+﻿@page "/{_contextpageurlpath?}"
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using System.Linq
+@using System.Collections.Generic
+@using Mihcelle.Hwavmvid.Shared.Models
+@using Mihcelle.Hwavmvid.Providers
+@using Mihcelle.Hwavmvid.Alerts
+@using Mihcelle.Hwavmvid.Fileupload
+
+@inject Data.Applicationdbcontext applicationdbcontext
+@inject Installationprovider installationprovider
+@inject Applicationprovider applicationprovider
+@inject Cookies.Cookiesprovider cookiesprovider
+@inject Modal.Modalservice modalservice
+@inject Fileuploadservice fileuploadservice
+
+@inject IConfiguration configuration
+@inject IHttpClientFactory ihttpclientfactory
+@inject NavigationManager navigationmanager
+@inject AlertsService alertsservice
+@inject Applicationbackendprovider applicationbackendprovider
+
+
+
+<div>
+
+    @if (this.installationprovider.connectionstringinstalled == true && this.installationprovider.authenticateduserinstalled == true)
+    {
+
+        <div class="sidebar">
+
+            <Mihcelle.Hwavmvid.Components.Layout.NavMenu />
+
+        </div>
+
+        <div class="content px-4">
+
+            <PageTitle>Home</PageTitle>
+
+            <h1>Hello, world!</h1>
+
+            Welcome to your new app. Installation link here.
+
+            <div>
+                <NavLink class="dropdown-item" href="Installation">
+                    <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Install and ensure database created.
+                </NavLink>
+            </div>
+
+        </div>
+
+
+
+        <div>
+            @if (this.applicationbackendprovider?._contextpage != null)
+            {
+                <div class="py-3">
+
+                    <div class="jumbotron jumbotron-fluid">
+                        <div class="container-fluid">
+
+                            <Mihcelle.Hwavmvid.Components.Container.Container></Mihcelle.Hwavmvid.Components.Container.Container>
+
+                        </div>
+                    </div>
+
+                </div>
+            }
+
+            @if (this.applicationbackendprovider?._contextpage == null)
+            {
+                <div class="py-3">
+
+                    <div class="jumbotron jumbotron-fluid">
+                        <div class="container">
+
+                            <h1 class="display-4 py-1" style="font-weight: 400 !important;">Webpage not found 404</h1>
+
+                        </div>
+                    </div>
+
+                </div>
+            }
+        </div>
+
+
+        <Mihcelle.Hwavmvid.Alerts.AlertsComponent />
+        <Mihcelle.Hwavmvid.Notifications.NotificationsComponent />
+    }
+
+</div>
+
+
+@code{
+
+
+
+    [Parameter] public string? _contextpageurlpath { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.installationprovider.connectionstringinstalled = !string.IsNullOrEmpty(this.configuration.GetConnectionString("DefaultConnection"));
+
+        try
+        {
+            if (this.installationprovider.connectionstringinstalled == true)
+            {
+                var host = await this.applicationdbcontext.Users.Where(item => item.UserName == "host").FirstOrDefaultAsync();
+                if (host != null) this.installationprovider.authenticateduserinstalled = true;
+            }
+        } catch (Exception exception) { Console.Write("Host installation page context. Host account not available."); }
+
+        if (this.installationprovider.connectionstringinstalled == true && this.installationprovider.authenticateduserinstalled == true)
+        {
+            this.applicationbackendprovider._contextsite = await this.applicationdbcontext.Applicationsites.FirstOrDefaultAsync();
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+
+        if (this.installationprovider.connectionstringinstalled == true && this.installationprovider.authenticateduserinstalled == true)
+        {
+            if (this.applicationbackendprovider._contextpage == null)
+            {
+                var contextsiteid = this.applicationbackendprovider?._contextsite?.Id;
+                this.applicationbackendprovider._contextpage = await this.applicationdbcontext.Applicationpages.Where(item => item.Siteid == contextsiteid && (item.Urlpath == this._contextpageurlpath || item.Urlpath == "index")).FirstOrDefaultAsync();
+            }
+        }
+
+        await base.OnParametersSetAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+
+        if (firstRender && this.installationprovider.connectionstringinstalled == false && this.installationprovider.authenticateduserinstalled == false)
+        {
+            this.navigationmanager.NavigateTo(this.navigationmanager.BaseUri + "installation", true);
+        }
+
+        if (firstRender && this.installationprovider.connectionstringinstalled == true && this.installationprovider.authenticateduserinstalled == false)
+        {
+            this.navigationmanager.NavigateTo(this.navigationmanager.BaseUri + "installationauthentication", true);
+        }
+
+        if (firstRender && this.installationprovider.connectionstringinstalled == true && this.installationprovider.authenticateduserinstalled == true)
+        {
+
+
+            await this.cookiesprovider.Initcookiesprovider();
+            var client = this.ihttpclientfactory.CreateClient();
+            client.BaseAddress = new Uri(this.navigationmanager.BaseUri);
+            var httpresponsemessage = await client.GetAsync("api/authcookie");
+            var authcookie = await httpresponsemessage.Content.ReadAsStringAsync();
+            if (!string.IsNullOrEmpty(authcookie))
+            {
+                await this.cookiesprovider.Setcookie(Shared.Constants.Authentication.Authcookiename, authcookie, 10);
+            }
+
+            string cookievalue = await this.cookiesprovider.Getcookie(Shared.Constants.Authentication.Authcookiename);
+            await this.applicationprovider.Establishapplicationconnection();            
+            await this.applicationprovider.Initpackagemoduledraganddrop();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+}

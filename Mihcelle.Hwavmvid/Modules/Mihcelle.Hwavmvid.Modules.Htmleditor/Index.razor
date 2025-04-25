@@ -1,0 +1,365 @@
+﻿@namespace Mihcelle.Hwavmvid.Modules.Htmleditor
+@inherits Modulebase
+
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using System.ComponentModel.DataAnnotations
+@using Mihcelle.Hwavmvid.Modal
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+
+
+@inject IHttpClientFactory ihttpclientfactory
+@inject NavigationManager navigationmanager
+@inject Modalservice modalservice
+
+
+
+<AuthorizeView Roles="@string.Concat(Mihcelle.Hwavmvid.Shared.Constants.Authentication.Administratorrole, ",", @Mihcelle.Hwavmvid.Shared.Constants.Authentication.Hostrole)">
+
+    <Authorized>
+
+        @if (this.editor != null)
+        {
+            <div>
+
+                <Modalcomponent ElementId="@this._htmleditormodalelementid">
+
+                    <Modalheader>
+
+                        <div class="bg-dark text-light text-center px-2 py-2">
+
+                            <div class="lead py-2">
+                                Htmleditor
+                            </div>
+
+                        </div>
+
+                    </Modalheader>
+
+                    <Modalbody>
+
+                        <ul class="nav nav-tabs" id="@htmleditortabsnavigationid" role="tablist">
+
+                            <li class="nav-item" role="@htmleditortabsnavigationid">
+                                <button class="nav-link active" id="@this.htmltabid" data-bs-toggle="tab" data-bs-target="#@this.htmltabcontrolid" type="button" role="tab" aria-controls="@this.htmltabcontrolid" aria-selected="true">html</button>
+                            </li>
+
+                            <li class="nav-item" role="@htmleditortabsnavigationid">
+                                <button class="nav-link" id="@this.asscciitabid" data-bs-toggle="tab" data-bs-target="#@this.asscciitabcontrolid" type="button" role="tab" aria-controls="@this.asscciitabcontrolid" aria-selected="false">assccii</button>
+                            </li>
+
+                            <li class="nav-item" role="@htmleditortabsnavigationid">
+                                <button class="nav-link" id="@this.bitstabid" data-bs-toggle="tab" data-bs-target="#@this.bitstabcontrolid" type="button" role="tab" aria-controls="@this.bitstabcontrolid" aria-selected="false">bits</button>
+                            </li>
+
+                        </ul>
+
+                        <div class="tab-content">
+
+                            <div class="tab-pane active" id="@this.htmltabcontrolid" role="tabpanel" aria-labelledby="@this.htmltabid">
+
+                                <div class="p-2 lead">
+
+                                    <div>
+                                        <strong><small>Edit html output</small></strong>
+                                    </div>
+
+                                    <textarea @bind="this.editor.Htmlstring" rows="14" cols="410" class="w-100" onclick="border border-dark"></textarea>
+
+                                </div>
+
+                            </div>
+
+                            <div class="tab-pane" id="@this.asscciitabcontrolid" role="tabpanel" aria-labelledby="@this.asscciitabid">
+
+                                <div class="p-2 lead">
+
+                                    <div>
+                                        <strong><small>Edit html in bytes asscie format</small></strong>
+                                    </div>
+
+                                    <textarea @bind="this.bytestring" rows="14" cols="410" class="w-100" onclick="border border-dark"></textarea>
+
+                                </div>
+
+                            </div>
+
+                            <div class="tab-pane" id="@this.bitstabcontrolid" role="tabpanel" aria-labelledby="@this.bitstabid">
+
+                                <div class="p-2 lead">
+
+                                    <div>
+                                        <strong><small>Edit html in binary data</small></strong>
+                                    </div>
+
+                                    <textarea @bind="this.binarystring" rows="14" cols="410" class="w-100" onclick="border border-dark"></textarea>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </Modalbody>
+
+                    <Modalfooter>
+
+                        <div class="float-end">
+
+                            <button type="button" @onclick="async () => await this.Savechanges()" class="btn btn-sm btn-link">
+                                Save changes
+                            </button>
+
+                            <button @onclick="(() => this.modalservice.HideModal(this._htmleditormodalelementid))" type="button" class="btn btn-sm btn-link">
+                                Close editor
+                            </button>
+
+                        </div>
+
+                    </Modalfooter>
+
+                </Modalcomponent>
+
+            </div>
+
+        }
+
+    </Authorized>
+
+</AuthorizeView>
+
+
+@if (this.editor != null)
+{
+
+    <div>
+
+        <div class="position-relative py-2" style="min-height: 140px;">
+
+
+            <AuthorizeView Roles="@string.Concat(Mihcelle.Hwavmvid.Shared.Constants.Authentication.Administratorrole, ",", @Mihcelle.Hwavmvid.Shared.Constants.Authentication.Hostrole)">
+
+                <Authorized>
+
+                    <button @onclick="async() => await this.Opencontextmodule()" @onclick:stopPropagation=true type="button" class="btn btn-sm btn-link px-2 py-4 rounded-0" style="position: absolute; bottom: 4px; right: 4px;">
+                        <small class="py-2">Edit html</small>
+                    </button>
+
+                </Authorized>
+
+            </AuthorizeView>
+
+
+            <div @ondblclick="async() => await this.Opencontextlightbox()">@((MarkupString)this.editor.Htmlstring)</div>
+
+        </div>
+
+        <div>
+
+            <Modalcomponent ElementId="@_htmleditorlightboxelementid">
+
+                <Modalheader>
+
+                    <div class="bg-dark text-light text-center px-2 py-2 d-none">
+
+                        <div class="lead py-2">
+                            Htmleditorlightbox
+                        </div>
+
+                    </div>
+
+                </Modalheader>
+
+                <Modalbody>
+
+                    <div>
+
+                        @if (!string.IsNullOrEmpty(lightboximg))
+                        {
+
+                            <img src="@lightboximg" title="double click for lightbox" alt="@lightboximg" />
+
+                        }
+
+                    </div>
+
+                </Modalbody>
+
+                <Modalfooter>
+
+                    <div class="float-end">
+
+                        <button @onclick="(() => this.modalservice.HideModal(this._htmleditorlightboxelementid))" type="button" class="btn btn-sm btn-link">
+                            Close editor
+                        </button>
+
+                    </div>
+
+                </Modalfooter>
+
+            </Modalcomponent>
+
+        </div>
+
+    </div>
+
+}
+
+
+@code {
+
+    [Parameter] public Moduleservice<Modulepreferences> Moduleparams { get; set; }
+
+    public string _htmleditormodalelementid { get; set; } = string.Concat("htmleditor-", Guid.NewGuid().ToString()).Replace("_", " - ");
+    public string _htmleditorlightboxelementid { get; set; } = string.Concat("htmleditor-", Guid.NewGuid().ToString()).Replace("_", " - ");
+
+    public Applicationhtmleditor? editor { get; set; }
+    public string? bytestring { get; set; }
+    public string? binarystring { get; set; }
+
+    public string htmleditortabsnavigationid { get; set; }
+    public string htmltabid { get; set; }
+    public string asscciitabid { get; set; }
+    public string bitstabid { get; set; }
+    public string htmltabcontrolid { get; set; }
+    public string asscciitabcontrolid { get; set; }
+    public string bitstabcontrolid { get; set; }
+
+    public string lightboximg { get; set; } = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        this.htmleditortabsnavigationid = string.Concat("htmleditor-", Guid.NewGuid().ToString()).Replace("_", " - ");
+        this.htmltabid = string.Concat("htmleditor-", Guid.NewGuid().ToString()).Replace("_", " - ");
+        this.asscciitabid = string.Concat("htmleditor-", Guid.NewGuid().ToString()).Replace("_", " - ");
+        this.bitstabid = string.Concat("htmleditor-", Guid.NewGuid().ToString()).Replace("_", " - ");
+        this.htmltabcontrolid = string.Concat("htmleditor-", Guid.NewGuid().ToString()).Replace("_", " - ");
+        this.asscciitabcontrolid = string.Concat("htmleditor-", Guid.NewGuid().ToString()).Replace("_", " - ");
+        this.bitstabcontrolid = string.Concat("htmleditor-", Guid.NewGuid().ToString()).Replace("_", " - ");
+
+        base.OnInitialized();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+
+        if (this.editor == null && !string.IsNullOrEmpty(this.Moduleparams.Preferences.ModuleId))
+        {
+            try
+            {
+
+                var client = this.ihttpclientfactory.CreateClient();
+                client.BaseAddress = new Uri(this.navigationmanager.BaseUri);
+                this.editor = await client.GetFromJsonAsync<Applicationhtmleditor?>(string.Concat("api/htmleditor/", this.Moduleparams.Preferences.ModuleId));
+
+
+                if (!string.IsNullOrEmpty(this.editor.Htmlstring))
+                {
+
+                    // asscii byte format things || 10_backslash || 60_n || 1060_\n || 1088_\t || assccii chars &#010; &#nbsp;
+                    string tempbytestream = string.Empty;
+                    for (var y = 0; y < this.editor?.Htmlstring.Count(); y++)
+                    {
+                        char asscciiitem = this.editor.Htmlstring.Skip(y).FirstOrDefault();
+                        tempbytestream += Convert.ToByte(asscciiitem);
+                        tempbytestream += "\\";
+                    }
+
+                    this.bytestring = tempbytestream;
+                    this.bytestring = this.bytestring?.Replace("1060", "\n");
+                    this.bytestring = this.bytestring?.Replace("8888", "\t");
+
+                    // asscii sbyte format things || Convert.ToString(int val, int base);
+                    string tempsbytestream = string.Empty;
+                    for (var y = 0; y < this.editor?.Htmlstring.Count(); y++)
+                    {
+                        char asscciiitem = this.editor.Htmlstring.Skip(y).FirstOrDefault();
+                        tempsbytestream += Convert.ToString(Convert.ToByte(asscciiitem), 2);
+                        tempsbytestream += "\\";
+                    }
+
+                    this.binarystring = tempsbytestream;
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception.Message);
+            }
+        }
+
+        await base.OnParametersSetAsync();
+    }
+
+    public async Task Savechanges()
+    {
+        try
+        {
+            var client = this.ihttpclientfactory.CreateClient();
+            client.BaseAddress = new Uri(this.navigationmanager.BaseUri);
+            await client.PostAsJsonAsync<Applicationhtmleditor?>("api/htmleditor", this.editor);
+            this.navigationmanager.NavigateTo(navigationmanager.Uri, true);
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine(exception.Message);
+        }
+    }
+
+    public async Task Opencontextmodule()
+    {
+
+        await this.modalservice.ShowModal(this._htmleditormodalelementid);
+
+        await InvokeAsync(() =>
+        {
+            this.StateHasChanged();
+        });
+    }
+
+    public async Task Opencontextlightbox()
+    {
+
+
+        if (this.editor != null && !string.IsNullOrEmpty(this.editor.Htmlstring))
+        {
+
+            await this.modalservice.ShowModal(this._htmleditorlightboxelementid);
+            string tempstring = this.editor.Htmlstring;
+            while (true)
+            {
+                try
+                {
+
+                    tempstring = string.Concat(tempstring.SkipWhile(item => item != '<').Select(item => item));
+                    if (!string.IsNullOrEmpty(tempstring) && tempstring.StartsWith("<img"))
+                    {
+                        IEnumerable<char> screenedchars = tempstring.SkipWhile(item => item != '"').Skip(1).TakeWhile(item => item != '"');
+                        this.lightboximg = string.Concat(screenedchars);
+                        break;
+                    }
+                    else { tempstring = tempstring.Remove(0, 1); }
+                }
+                catch (Exception exception)
+                {
+                    // no images found inside html for lightbox
+                    break;
+                }
+            }
+        }
+
+        await InvokeAsync(() =>
+        {
+            this.StateHasChanged();
+        });
+    }
+
+    public class Applicationhtmleditor
+    {
+        public string Id { get; set; }
+        public string Moduleid { get; set; }
+        public string Htmlstring { get; set; }
+        public DateTime Createdon { get; set; }
+    }
+
+}

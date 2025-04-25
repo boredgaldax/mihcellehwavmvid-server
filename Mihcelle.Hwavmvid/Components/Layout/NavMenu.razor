@@ -1,0 +1,186 @@
+﻿@rendermode InteractiveServer
+@implements IDisposable
+
+@inject Applicationprovider applicationprovider
+@inject NavigationManager NavigationManager
+@inject Applicationdbcontext applicationdbcontext
+@inject IConfiguration configuration
+@inject Applicationbackendprovider applicationbackendprovider
+
+@using System
+@using System.Data.Common
+@using System.Linq
+@using System.Collections.Generic
+@using Microsoft.EntityFrameworkCore
+@using Mihcelle.Hwavmvid.Data
+@using Mihcelle.Hwavmvid.Shared.Models
+@using Mihcelle.Hwavmvid.Providers
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
+
+    <div class="container-fluid">
+
+        <a class="navbar-brand" href="#"><img src="@(string.Concat(NavigationManager.BaseUri, "hwavmvidtechnologies.png"))" height="55" alt="brandmark" /></a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link disabled lead text-dark" href="#" style="font-size: 1.2rem;">mihcellehwavmvid .net framework</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto">
+
+                <li class="nav-item dropdown">
+
+                    <a class="nav-link dropdown-toggle" href="#" id="navbardropdownblank" role="button" aria-haspopup="true" aria-expanded="false" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                        Links
+                    </a>
+
+                    @if (this.contextpages != null && this.contextpages.Any())
+                    {
+                        <ul class="dropdown-menu" aria-labelledby="navbardropdownblank" style="left: auto !important; right: 0;">
+
+                            @foreach (var item in this.contextpages)
+                            {
+                                <li class="dropdown-item">
+                                    <a href="@(this.NavigationManager.BaseUri + item.Urlpath)" target="_self">
+                                        @item.Name
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </li>
+
+                <AuthorizeView>
+                    <Authorized>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardropdownmodulepackages" role="button" aria-haspopup="true" aria-expanded="false" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                Packages
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbardropdownmodulepackages" style="left: auto !important; right: 0;">
+                                <li>
+                                    <div class="p-2 p-sm-4" style="min-width: 410px;">
+
+                                        <Mihcelle.Hwavmvid.Components.Layout.Modulepackagesdropdowncomponent></Mihcelle.Hwavmvid.Components.Layout.Modulepackagesdropdowncomponent>
+
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                    </Authorized>
+                </AuthorizeView>
+
+                <AuthorizeView>
+                    <Authorized>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardropdownadmindashboard" role="button" aria-haspopup="true" aria-expanded="false" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                Admin
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbardropdownadmindashboard" style="left: auto !important; right: 0;">
+                                <li>
+                                    <div class="p-2 p-sm-4" style="min-width: 850px;">
+
+                                        <Mihcelle.Hwavmvid.Modules.Admin.Dashboard />
+
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                    </Authorized>
+                </AuthorizeView>
+
+                <li class="nav-item dropdown">
+
+
+                    <a class="nav-link dropdown-toggle" href="#" id="navbardropdownaccount" role="button" aria-haspopup="true" aria-expanded="false" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+
+                        <AuthorizeView>
+                            <Authorized>
+                                <span>☑ @context?.User?.Identity?.Name</span>
+                            </Authorized>
+                        </AuthorizeView>                        
+
+                        <AuthorizeView>
+                            <NotAuthorized>
+
+                                <span>Account / Login</span>
+
+                            </NotAuthorized>
+                        </AuthorizeView>
+
+
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbardropdownaccount" style="left: auto !important; right: 0;">
+                        <li>
+                            <div class="p-2 p-sm-4" style="min-width: 410px;">
+
+                                <AuthorizeView>
+                                    <NotAuthorized>
+
+                                        <div class="mb-4">
+                                            <Mihcelle.Hwavmvid.Components.Authentication.Registrationcomponent />
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <Mihcelle.Hwavmvid.Components.Authentication.Logincomponent />
+                                        </div>
+
+                                    </NotAuthorized>
+                                </AuthorizeView>
+
+                                <AuthorizeView>
+                                    <Authorized>
+                                        <form action="Account/Logout" method="post">
+
+                                            <Mihcelle.Hwavmvid.Components.Authentication.Logoutcomponent />
+
+                                        </form>
+                                    </Authorized>
+                                </AuthorizeView>
+
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+
+            </ul>
+        </div>
+
+    </div>
+
+</nav>
+
+@code {
+
+
+    private string? currentUrl;
+    protected List<Applicationpage>? contextpages { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        this.applicationbackendprovider._contextsite = await this.applicationdbcontext.Applicationsites.FirstOrDefaultAsync();
+        this.contextpages = await this.applicationdbcontext.Applicationpages.Where(item => item.Siteid == this.applicationbackendprovider._contextsite.Id).ToListAsync();
+        
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+
+        await base.OnInitializedAsync();
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}
+
