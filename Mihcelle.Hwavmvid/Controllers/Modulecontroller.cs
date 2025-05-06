@@ -36,22 +36,23 @@ namespace Mihcelle.Hwavmvid.Controllers
             var module = await this.applicationdbcontext.Applicationmodules.FirstOrDefaultAsync(item => item.Id == id);
             if (module != null)
             {
-                var installeritems = AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.GetTypes()).Where(assemblytypes => (typeof(IModuleinstallerinterface)).IsAssignableFrom(assemblytypes));
-                foreach (var item in installeritems)
+
+                try
                 {
-                    if (item.IsClass)
+                    var installeritems = AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.GetTypes()).Where(assemblytypes => (typeof(IModuleinstallerinterface)).IsAssignableFrom(assemblytypes));
+                    foreach (var item in installeritems)
                     {
-                        var moduleinstaller = (IModuleinstallerinterface?)this.serviceprovider.GetService(item);
-                        if (moduleinstaller != null)
+                        if (item.IsClass)
                         {
-                            try
+                            var moduleinstaller = (IModuleinstallerinterface?)this.serviceprovider.GetService(item);
+                            if (moduleinstaller != null)
                             {
-                                await moduleinstaller.Removemodule(id);
+                                    await moduleinstaller.Removemodule(id);
                             }
-                            catch (Exception exception) { Console.WriteLine(exception.Message); }
                         }
                     }
                 }
+                catch (Exception exception) { Console.WriteLine(exception.Message); }
 
                 await this.applicationdbcontext.Applicationmodules.Where(item => item.Id == id).ExecuteDeleteAsync();
                 await this.applicationdbcontext.SaveChangesAsync();

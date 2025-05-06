@@ -1,5 +1,4 @@
 ﻿@rendermode InteractiveServer
-@implements IDisposable
 
 @inject Applicationprovider applicationprovider
 @inject NavigationManager NavigationManager
@@ -46,9 +45,9 @@
                             @foreach (var item in this.contextpages)
                             {
                                 <li class="dropdown-item">
-                                    <a href="@(this.NavigationManager.BaseUri + item.Urlpath)" target="_self">
-                                        @item.Name
-                                    </a>
+
+                                    <a href="#" @onclick="() => navigateto(this.NavigationManager.BaseUri + item.Urlpath)">@item.Urlpath</a>
+
                                 </li>
                             }
                         </ul>
@@ -165,22 +164,14 @@
 
         this.applicationbackendprovider._contextsite = await this.applicationdbcontext.Applicationsites.FirstOrDefaultAsync();
         this.contextpages = await this.applicationdbcontext.Applicationpages.Where(item => item.Siteid == this.applicationbackendprovider._contextsite.Id).ToListAsync();
-        
-        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        NavigationManager.LocationChanged += OnLocationChanged;
 
         await base.OnInitializedAsync();
     }
 
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    protected void navigateto(string page)
     {
-        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-        StateHasChanged();
+        this.NavigationManager.NavigateTo(page, true);
     }
 
-    public void Dispose()
-    {
-        NavigationManager.LocationChanged -= OnLocationChanged;
-    }
 }
 

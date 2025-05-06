@@ -25,7 +25,7 @@ namespace Mihcelle.Hwavmvid.Modules.Blackjack
         {
 
             migrationbuilder.CreateTable(
-                 name: "Applicationlblackjacks",
+                 name: "Applicationblackjacks",
                  columns: dbtable => new
                  {
                      Id = dbtable.Column<string>(type: "nvarchar(410)", nullable: false, unicode: null),
