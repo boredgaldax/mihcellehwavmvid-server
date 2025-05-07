@@ -65,7 +65,16 @@ namespace Mihcelle.Hwavmvid.Jsapigeolocation
         {
             var map = this.Getmap(componentid);
             if (map != null)
-                await map.Jsmapreference.InvokeVoidAsync("requestcoords");
+            {
+                try
+                {
+                    await map.Jsmapreference.InvokeVoidAsync("requestcoords");
+                } 
+                catch (Exception exception) 
+                {
+                    Console.WriteLine(exception.Message);
+                }
+            }
         }
         public async Task Renderbingmapposition(string componentid, double? latitude, double? longitude)
         {

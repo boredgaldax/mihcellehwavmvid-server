@@ -14,6 +14,7 @@ namespace Mihcelle.Hwavmvid.Fileupload
 
         [Inject] protected IHttpClientFactory ihttpclientfactory { get; set; }
         [Inject] protected Fileuploadservice FileUploadService { get; set; }
+        [Inject] protected NavigationManager navigationmanager { get; set; }
 
         [Parameter] public Dictionary<string, string> FileUploadHeaders { get; set; }
         [Parameter] public string ApiUrl { get; set; }
@@ -145,7 +146,8 @@ namespace Mihcelle.Hwavmvid.Fileupload
                     }
                 }
 
-                var client = this.ihttpclientfactory.CreateClient("Mihcelle.Hwavmvid.ServerApi.Unauthenticated");
+                var client = this.ihttpclientfactory.CreateClient();
+                client.BaseAddress = new Uri(this.navigationmanager.BaseUri);
                 var result = await client.PostAsync(this.ApiUrl, content);
                 var remotePath = await result.Content.ReadAsStringAsync();
             }
