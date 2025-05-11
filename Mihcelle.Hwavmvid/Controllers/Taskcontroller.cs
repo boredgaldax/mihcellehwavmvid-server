@@ -31,16 +31,15 @@ namespace Mihcelle.Hwavmvid.Controllers
         public async Task<Pagerapiitem<Applicationtask>?> Get(int contextpage, int itemsperpage, string siteid)
         {
 
+            var tasks = new List<Applicationtask>();
+            var scope = this.servicescopefactory.CreateScope();
+            var hostedservices = AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.GetTypes()).Where(assemblytypes => (typeof(IHostedservicebase)).IsAssignableFrom(assemblytypes));
 
             try
             {
-                var scope = this.servicescopefactory.CreateScope();
-                var hostedservices = AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.GetTypes()).Where(assemblytypes => (typeof(IHostedservicebase)).IsAssignableFrom(assemblytypes));
-                var tasks = new List<Applicationtask>();
-
+                
                 foreach (var serviceclassitem in hostedservices)
                 {
-
                     if (serviceclassitem.IsClass)
                     {
 
@@ -60,23 +59,22 @@ namespace Mihcelle.Hwavmvid.Controllers
                         }
                     }
                 }
-
-                var items = tasks.Skip((contextpage - 1) * itemsperpage).Take(itemsperpage).ToList();
-                int pagesTotal = Convert.ToInt32(Math.Ceiling(tasks.Count() / Convert.ToDouble(itemsperpage)));
-                var apiitem = new Pagerapiitem<Applicationtask>()
-                {
-                    Items = items,
-                    Pages = pagesTotal,
-                };
-
-                return apiitem;
             }
-            catch (Exception exception) 
-            { 
+            catch (Exception exception)
+            {
                 Console.WriteLine(exception.Message);
             }
 
-            return null;
+            var items = tasks.Skip((contextpage - 1) * itemsperpage).Take(itemsperpage).ToList();
+            int pagesTotal = Convert.ToInt32(Math.Ceiling(tasks.Count() / Convert.ToDouble(itemsperpage)));
+            var apiitem = new Pagerapiitem<Applicationtask>()
+            {
+                Items = items,
+                Pages = pagesTotal,
+            };
+
+            return apiitem;
+            
         }
 
         [Authorize]
@@ -99,7 +97,7 @@ namespace Mihcelle.Hwavmvid.Controllers
                         var hostedserviceitem = (IHostedservicebase?)scope.ServiceProvider.GetService(serviceclassitem);
                         if (hostedserviceitem != null && hostedserviceitem.Id == taskitem.Id)
                         {
-                            hostedserviceitem.Active = taskitem.Active;
+                            hostedserviceitem.Active = (bool) taskitem.Active;
                             break;
                         }
                     }
