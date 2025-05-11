@@ -112,7 +112,11 @@
             if (this.applicationbackendprovider._contextpage == null)
             {
                 var contextsiteid = this.applicationbackendprovider?._contextsite?.Id;
-                this.applicationbackendprovider._contextpage = await this.applicationdbcontext.Applicationpages.Where(item => item.Siteid == contextsiteid && (item.Urlpath == this._contextpageurlpath || item.Urlpath == "index")).FirstOrDefaultAsync();
+                this.applicationbackendprovider._contextpage = await this.applicationdbcontext.Applicationpages.Where(item => item.Siteid == contextsiteid && (item.Urlpath == this._contextpageurlpath)).FirstOrDefaultAsync();
+                if (applicationbackendprovider._contextpage == null)
+                {
+                    this.applicationbackendprovider._contextpage = await this.applicationdbcontext.Applicationpages.FirstOrDefaultAsync(item => item.Urlpath == "index");
+                }
             }
         }
 
