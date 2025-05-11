@@ -73,31 +73,35 @@
 
 @code {
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstrender)
     {
 
-        this.applicationbackendprovider._contextcontainer = await this.applicationdbcontext.Applicationcontainers.FirstOrDefaultAsync(item => item.Pageid == this.applicationbackendprovider._contextpage.Id);
-        var columns = await this.applicationdbcontext.Applicationcontainercolumns.Where(item => item.Containerid == this.applicationbackendprovider._contextcontainer.Id).ToListAsync();
-        if (columns != null && columns.Any())
+        if (firstrender)
         {
-            var orderedcolumns = columns.OrderBy(item => item.Gridposition).ToList();
-            foreach (var column in orderedcolumns)
+
+            this.applicationbackendprovider._contextcontainer = await this.applicationdbcontext.Applicationcontainers.FirstOrDefaultAsync(item => item.Pageid == this.applicationbackendprovider._contextpage.Id);
+            var columns = await this.applicationdbcontext.Applicationcontainercolumns.Where(item => item.Containerid == this.applicationbackendprovider._contextcontainer.Id).ToListAsync();
+            if (columns != null && columns.Any())
             {
-                column.Modules.Clear();
-                var modules = await this.applicationdbcontext.Applicationmodules.Where(item => item.Containercolumnid == column.Id).ToListAsync();
-                foreach (var module in modules)
+                var orderedcolumns = columns.OrderBy(item => item.Gridposition).ToList();
+                foreach (var column in orderedcolumns)
                 {
-                    column.Modules.Add(module);
+                    column.Modules.Clear();
+                    var modules = await this.applicationdbcontext.Applicationmodules.Where(item => item.Containercolumnid == column.Id).ToListAsync();
+                    foreach (var module in modules)
+                    {
+                        column.Modules.Add(module);
+                    }
+
+                    column.Modules = column.Modules.OrderBy(item => item.Createdon).ToList();
                 }
 
-                column.Modules = column.Modules.OrderBy(item => item.Createdon).ToList();
+                this.applicationbackendprovider._contextcontainercolumns = orderedcolumns;
+                this.StateHasChanged();
             }
-
-            this.applicationbackendprovider._contextcontainercolumns = orderedcolumns;
-            this.StateHasChanged();
         }
 
-        await base.OnInitializedAsync();
+        await base.OnAfterRenderAsync(firstrender);
     }
 
     protected async Task Setcontainertype()
