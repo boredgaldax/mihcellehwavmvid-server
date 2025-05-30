@@ -84,6 +84,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+
+        this.applicationbackendprovider._contextpage = null;
         this.installationprovider.connectionstringinstalled = !string.IsNullOrEmpty(this.configuration.GetConnectionString("DefaultConnection"));
 
         try
@@ -110,7 +112,6 @@
         if (this.installationprovider.connectionstringinstalled == true && this.installationprovider.authenticateduserinstalled == true)
         {
             var contextsiteid = this.applicationbackendprovider?._contextsite?.Id;
-            this.applicationbackendprovider._contextpage = null;
             this.applicationbackendprovider._contextpage = await this.applicationdbcontext.Applicationpages.Where(item => item.Siteid == contextsiteid && (item.Urlpath == this._contextpageurlpath)).FirstOrDefaultAsync();
             if (applicationbackendprovider._contextpage == null)
             {
