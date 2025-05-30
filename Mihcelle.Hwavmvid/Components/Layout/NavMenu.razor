@@ -45,9 +45,7 @@
                             @foreach (var item in this.contextpages)
                             {
                                 <li class="dropdown-item">
-
-                                    <a href="#" @onclick="() => navigateto(this.NavigationManager.BaseUri + item.Urlpath)">@item.Urlpath</a>
-
+                                    <a href="@(NavigationManager.BaseUri + item.Urlpath)">@item.Urlpath</a>
                                 </li>
                             }
                         </ul>
@@ -166,11 +164,6 @@
         this.contextpages = await this.applicationdbcontext.Applicationpages.Where(item => item.Siteid == this.applicationbackendprovider._contextsite.Id).ToListAsync();
 
         await base.OnInitializedAsync();
-    }
-
-    protected void navigateto(string page)
-    {
-        this.NavigationManager.NavigateTo(page, true);
     }
 
 }
