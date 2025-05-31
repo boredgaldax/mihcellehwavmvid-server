@@ -86,6 +86,9 @@
     {
 
         this.applicationbackendprovider._contextpage = null;
+        this.applicationbackendprovider._contextcontainer = null;
+        this.applicationbackendprovider._contextcontainercolumns = null;
+
         this.installationprovider.connectionstringinstalled = !string.IsNullOrEmpty(this.configuration.GetConnectionString("DefaultConnection"));
 
         try
